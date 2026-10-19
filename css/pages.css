@@ -1,0 +1,52 @@
+/* assets/css/pages.css
+   Ajustes propios de cada pantalla. */
+
+/* ---------- Login y registro */
+.eyebrow {
+  font-family: var(--font-title);
+  font-size: 15px;
+  color: var(--warn);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.auth-card h1 { font-size: 32px; }
+.auth-sub { color: var(--muted); margin: 0 0 8px; font-size: 14px; }
+.auth-switch { font-size: 14px; color: var(--muted); margin-top: 18px; text-align: center; }
+.demo-box {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--muted);
+}
+.demo-box strong { color: var(--ink); }
+.demo-box .btn-link { align-self: flex-start; margin-top: 4px; }
+
+/* ---------- Dashboard */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.dashboard-grid .panel { margin-bottom: 0; }
+
+/* ---------- Detalle de obligación */
+.back-link { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; text-decoration: none; }
+.detail-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; margin-bottom: 20px; }
+.detail-grid .panel { margin-bottom: 0; }
+.detail-list { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+.detail-list dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.detail-list dd { margin: 2px 0 0; }
+.detail-amount { font-family: var(--font-title); font-size: 24px; font-weight: 600; }
+
+/* ---------- Asistente IA */
+.assistant-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; align-items: start; }
+.assistant-grid .panel { margin-bottom: 0; }
+
+@media (max-width: 960px) {
+  .dashboard-grid, .detail-grid, .assistant-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .detail-list { grid-template-columns: 1fr; }
+}

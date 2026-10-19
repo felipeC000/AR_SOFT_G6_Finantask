@@ -1,0 +1,169 @@
+/* assets/css/layout.css
+   Estructura general: menú lateral, área de contenido, encabezado de página
+   y pantallas de acceso. */
+
+/* ---------- Estructura con menú lateral */
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--teal);
+  color: #fff;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-top { display: flex; align-items: center; justify-content: space-between; }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  margin: 0 0 28px 6px;
+}
+.brand:hover { color: #fff; }
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.nav { display: flex; flex-direction: column; gap: 2px; }
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #CBD8D5;
+  text-decoration: none;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+.nav-link.is-active { color: #fff; background: rgba(255, 255, 255, 0.12); font-weight: 500; }
+
+.nav-tag {
+  margin-left: auto;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--amber);
+  color: var(--teal);
+  padding: 1px 6px;
+  border-radius: 100px;
+  font-weight: 600;
+}
+
+.sidebar-user {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 6px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.user-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--teal);
+  display: grid; place-items: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.user-info { display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
+.user-info small { color: #A9BBB7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.nav-logout {
+  margin-left: auto;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #CBD8D5;
+  padding: 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: grid; place-items: center;
+}
+.nav-logout:hover { color: #fff; border-color: #fff; }
+
+/* ---------- Contenido */
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 36px 44px 56px;
+  max-width: 1120px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.page-sub { color: var(--muted); margin: 0; font-size: 14px; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- Pantallas de acceso */
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) 1.1fr;
+}
+.auth-aside {
+  background: var(--teal);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.brand--light { margin-bottom: 40px; }
+.auth-quote { font-family: var(--font-title); font-size: 30px; line-height: 1.2; margin: 0 0 24px; max-width: 360px; }
+.auth-points { list-style: none; padding: 0; margin: 0; color: #CBD8D5; }
+.auth-points li { padding: 8px 0 8px 22px; position: relative; }
+.auth-points li::before { content: ""; position: absolute; left: 0; top: 16px; width: 10px; height: 2px; background: var(--amber); }
+
+.auth-main { display: flex; align-items: center; justify-content: center; padding: 32px 24px; }
+.auth-card { width: 100%; max-width: 380px; }
+
+/* ---------- Responsive */
+@media (max-width: 900px) {
+  .content { padding: 28px 24px 48px; }
+}
+
+@media (max-width: 760px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: sticky; top: 0; z-index: 20; padding: 12px 16px; }
+  .brand { margin: 0; }
+  .menu-toggle { display: grid; place-items: center; }
+  .nav, .sidebar-user { display: none; }
+  .sidebar.is-open .nav { display: flex; margin-top: 12px; }
+  .sidebar.is-open .sidebar-user { display: flex; margin-top: 8px; }
+  .content { padding: 20px 16px 40px; }
+  h1 { font-size: 24px; }
+
+  .auth-screen { grid-template-columns: 1fr; }
+  .auth-aside { padding: 28px 24px; }
+  .auth-quote { font-size: 22px; margin-bottom: 8px; }
+  .auth-points { display: none; }
+  .brand--light { margin-bottom: 16px; }
+}
