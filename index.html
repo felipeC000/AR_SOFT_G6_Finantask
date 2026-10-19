@@ -1,25 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FinanTask</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinanTask: gestión de obligaciones financieras personales (prototipo académico)." />
+  <title>FinanTask</title>
+  <link rel="icon" href="assets/img/logo.svg" type="image/svg+xml" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Estilos separados por función -->
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/pages.css" />
 </head>
 <body>
-<div id="app"></div>
+  <div id="app"></div>
 
-<script src="js/data.js"></script>
-<script src="js/logic.js"></script>
-<script src="js/services.js"></script>
-<script src="js/ui/layout.js"></script>
-<script src="js/ui/login.js"></script>
-<script src="js/ui/dashboard.js"></script>
-<script src="js/ui/nuevaActividad.js"></script>
-<script src="js/ui/listaActividades.js"></script>
-<script src="js/app.js"></script>
+  <noscript>FinanTask necesita JavaScript para funcionar.</noscript>
+
+  <!--
+    El código está dividido en tres capas y se carga de abajo hacia arriba:
+    1. CAPA DE DATOS         → js/datos/
+    2. CAPA DE LÓGICA        → js/logica/  (reglas de negocio y servicios)
+    3. CAPA DE PRESENTACIÓN  → js/presentacion/  (componentes, páginas y navegación)
+    Cada capa solo usa a la que está debajo de ella.
+  -->
+
+  <!-- Utilidad compartida por las tres capas -->
+  <script src="js/compartido/fechas.js"></script>
+
+  <!-- ===== 1. CAPA DE DATOS ===== -->
+  <script src="js/datos/datosIniciales.js"></script>
+  <script src="js/datos/almacen.js"></script>
+
+  <!-- ===== 2. CAPA DE LÓGICA ===== -->
+  <script src="js/logica/reglas.js"></script>
+  <script src="js/logica/servicios/authService.js"></script>
+  <script src="js/logica/servicios/obligacionService.js"></script>
+  <script src="js/logica/servicios/resumenService.js"></script>
+  <script src="js/logica/servicios/asistenteIAService.js"></script>
+
+  <!-- ===== 3. CAPA DE PRESENTACIÓN (UI) ===== -->
+  <script src="js/presentacion/utilidades/formato.js"></script>
+  <script src="js/presentacion/utilidades/dom.js"></script>
+
+  <!-- Componentes visuales reutilizables -->
+  <script src="js/presentacion/componentes/Iconos.js"></script>
+  <script src="js/presentacion/componentes/Badge.js"></script>
+  <script src="js/presentacion/componentes/EmptyState.js"></script>
+  <script src="js/presentacion/componentes/FormErrors.js"></script>
+  <script src="js/presentacion/componentes/Feedback.js"></script>
+  <script src="js/presentacion/componentes/PageHeader.js"></script>
+  <script src="js/presentacion/componentes/Sidebar.js"></script>
+  <script src="js/presentacion/componentes/Layout.js"></script>
+  <script src="js/presentacion/componentes/AuthLayout.js"></script>
+  <script src="js/presentacion/componentes/StatCard.js"></script>
+  <script src="js/presentacion/componentes/AlertList.js"></script>
+  <script src="js/presentacion/componentes/FiltrosBar.js"></script>
+  <script src="js/presentacion/componentes/ObligacionesTable.js"></script>
+  <script src="js/presentacion/componentes/ObligacionForm.js"></script>
+  <script src="js/presentacion/componentes/PagoForm.js"></script>
+  <script src="js/presentacion/componentes/PagosTable.js"></script>
+  <script src="js/presentacion/componentes/CategoryBars.js"></script>
+
+  <!-- Pantallas -->
+  <script src="js/presentacion/paginas/LoginPage.js"></script>
+  <script src="js/presentacion/paginas/RegistroPage.js"></script>
+  <script src="js/presentacion/paginas/DashboardPage.js"></script>
+  <script src="js/presentacion/paginas/ObligacionesPage.js"></script>
+  <script src="js/presentacion/paginas/ObligacionFormPage.js"></script>
+  <script src="js/presentacion/paginas/DetalleObligacionPage.js"></script>
+  <script src="js/presentacion/paginas/PagosPage.js"></script>
+  <script src="js/presentacion/paginas/ReportesPage.js"></script>
+  <script src="js/presentacion/paginas/AsistentePage.js"></script>
+  <script src="js/presentacion/paginas/NoEncontradaPage.js"></script>
+
+  <!-- Navegación y arranque -->
+  <script src="js/presentacion/router.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
