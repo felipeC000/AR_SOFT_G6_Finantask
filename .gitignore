@@ -1,0 +1,15 @@
+# Credenciales reales: nunca se suben al repositorio (se crea a partir de config.example.php)
+backend/config.php
+.env
+
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
+node_modules/
+
+# Servicio inteligente (Python): entorno virtual y caché
+.venv/
+__pycache__/
+*.pyc

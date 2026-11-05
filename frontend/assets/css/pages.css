@@ -1,0 +1,53 @@
+/* assets/css/pages.css
+   Ajustes propios de cada pantalla. */
+
+/* ---------- Login y registro */
+.auth-sub { color: var(--muted); margin: 0 0 8px; font-size: 14px; }
+.auth-switch { font-size: 14px; color: var(--muted); margin-top: 18px; text-align: center; }
+.demo-box {
+  margin-top: 20px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--muted);
+}
+.demo-box strong { color: var(--ink); }
+.demo-box .btn-link { align-self: flex-start; margin-top: 4px; }
+
+/* ---------- Dashboard */
+.dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.dashboard-grid .panel { margin-bottom: 0; }
+
+/* ---------- Detalle de obligación */
+.back-link { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; text-decoration: none; }
+.detail-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; margin-bottom: 20px; }
+.detail-grid .panel { margin-bottom: 0; }
+.detail-list { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+.detail-list dt { font-size: 12px; color: var(--muted); }
+.detail-list dd { margin: 2px 0 0; }
+.detail-amount { font-size: 22px; font-weight: bold; }
+
+/* ---------- Asistente IA */
+
+@media (max-width: 960px) {
+}
+
+@media (max-width: 480px) {
+  .detail-list { grid-template-columns: 1fr; }
+}
+
+/* Mensaje mientras llega la respuesta del servidor */
+.cargando { padding: 48px 24px; text-align: center; color: var(--muted, #5f6b6e); }
+
+/* Sugerencia de prioridad con IA (formulario de obligación) */
+.ia-box { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.ia-box .btn svg { width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+.ia-resultado { font-size: 14px; }
+.ia-resultado p { margin: 0 0 4px; }
+.ia-resultado:empty { display: none; }
+.ia-resultado--ok { border-left: 3px solid var(--amber); background: var(--amber-soft); padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+.ia-resultado--error { color: var(--danger); }

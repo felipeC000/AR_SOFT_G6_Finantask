@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pruebas de integración · FinanTask</title>
+  <style>
+    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 32px auto; max-width: 1100px; padding: 0 16px; color: #24302e; }
+    h1 { margin-bottom: 4px; }
+    p.sub { margin-top: 0; color: #5f6b6e; }
+    button { font-size: 16px; padding: 10px 18px; border-radius: 6px; border: 0; background: #1f3a3f; color: #fff; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #b9c0bf; padding: 8px 10px; text-align: left; vertical-align: top; font-size: 14px; }
+    th { background: #e8ecea; }
+    .ok { color: #1f6b3b; font-weight: 700; }
+    .fallo { color: #b5442f; font-weight: 700; }
+    #resumen { margin-top: 16px; font-weight: 600; }
+    @media print { button { display: none; } }
+  </style>
+</head>
+<body>
+  <h1>Pruebas de integración · FinanTask</h1>
+  <p class="sub">Prueban el flujo completo: interfaz (cliente de la API) → backend PHP → base de datos MySQL.
+    Requieren Apache y MySQL iniciados en XAMPP y la base cargada (<code>database/schema.sql</code> y <code>datos_prueba.sql</code>).</p>
+  <button id="ejecutar">Ejecutar pruebas</button>
+  <p id="resumen"></p>
+  <p id="fecha" class="sub"></p>
+  <table id="tabla" hidden>
+    <thead><tr><th>N.º</th><th>Escenario</th><th>Resultado esperado</th><th>Resultado obtenido</th><th>Estado</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Se reutiliza el mismo cliente de la API que usa la aplicación -->
+  <script src="../frontend/js/datos/config.js"></script>
+  <script src="../frontend/js/datos/apiCliente.js"></script>
+  <script>
+    const NOMBRE_PRUEBA = "Prueba de integración " + Date.now();
+
+    function fechaMasDias(dias) {
+      const f = new Date();               // fecha local del navegador (no UTC)
+      f.setDate(f.getDate() + dias);
+      return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, "0")}-${String(f.getDate()).padStart(2, "0")}`;
+    }
+    async function intentar(fn) {
+      try { return { ok: true, valor: await fn() }; } catch (e) { return { ok: false, error: e }; }
+    }
+
+    const PRUEBAS = [
+      {
+        id: "1", escenario: "Registrar una obligación desde la interfaz (POST /obligaciones) y comprobar que queda almacenada en MySQL",
+        esperado: "El servidor responde 201 con la obligación creada (con id y estado PENDIENTE) y al consultarla por id se recupera de la base",
+        async ejecutar(ctx) {
+          const r = await ApiCliente.post("/obligaciones", { nombre: NOMBRE_PRUEBA, descripcion: "Creada por la prueba 1", idCategoria: 6,
+            valor: 150000, fechaLimite: fechaMasDias(10), prioridad: "MEDIA" });
+          ctx.idCreada = r.obligacion.id;
+          const leida = await ApiCliente.get("/obligaciones/" + ctx.idCreada);
+          const bien = leida.nombre === NOMBRE_PRUEBA && leida.estado === "PENDIENTE" && leida.valor === 150000;
+          return { aprobada: bien, obtenido: `Creada con id ${ctx.idCreada}; leída desde la base: "${leida.nombre}", estado ${leida.estado}, valor ${leida.valor}` };
+        },
+      },
+      {
+        id: "2", escenario: "Consultar las obligaciones (GET /obligaciones) y verificar que se visualizan correctamente",
+        esperado: "Devuelve la lista de obligaciones del usuario con todos sus campos, e incluye la creada en la prueba 1",
+        async ejecutar(ctx) {
+          const lista = await ApiCliente.get("/obligaciones");
+          const campos = ["id", "nombre", "valor", "fechaLimite", "prioridad", "estado", "categoria"];
+          const completa = lista.every((o) => campos.every((c) => c in o));
+          const incluida = lista.some((o) => o.id === ctx.idCreada);
+          return { aprobada: Array.isArray(lista) && completa && incluida,
+                   obtenido: `${lista.length} obligaciones; campos completos: ${completa ? "sí" : "no"}; incluye la de la prueba 1: ${incluida ? "sí" : "no"}` };
+        },
+      },
+      {
+        id: "3", escenario: "Enviar información inválida (valor negativo y fecha vacía) y comprobar que el sistema la controla",
+        esperado: "El backend rechaza la petición con 400, devuelve los mensajes de error y no guarda ningún registro",
+        async ejecutar() {
+          const nombre = "Inválida " + Date.now();
+          const r = await intentar(() => ApiCliente.post("/obligaciones", { nombre, idCategoria: 6, valor: -500, fechaLimite: "", prioridad: "ALTA" }));
+          const lista = await ApiCliente.get("/obligaciones");
+          const guardada = lista.some((o) => o.nombre === nombre);
+          const rechazada = !r.ok && r.error.estado === 400 && r.error.errores.length > 0;
+          return { aprobada: rechazada && !guardada,
+                   obtenido: rechazada ? `HTTP 400. Mensajes: ${r.error.errores.join(" | ")} - Guardada en la base: ${guardada ? "sí" : "no"}` : "El servidor no rechazó los datos inválidos" };
+        },
+      },
+      {
+        id: "4", escenario: "Simular un error de comunicación (el servidor no responde) y verificar que se informa al usuario",
+        esperado: "El cliente no se rompe: produce un error con el mensaje \"No se pudo conectar con el servidor...\" para mostrarlo en pantalla",
+        async ejecutar() {
+          const original = CONFIG.API_URL;
+          CONFIG.API_URL = "http://localhost:9/backend/index.php"; // puerto donde no hay ningún servidor
+          const r = await intentar(() => ApiCliente.get("/obligaciones"));
+          CONFIG.API_URL = original;
+          const informada = !r.ok && r.error instanceof ErrorApi && r.error.estado === 0 && /No se pudo conectar/.test(r.error.message);
+          return { aprobada: informada, obtenido: informada ? `Mensaje al usuario: "${r.error.message}"` : "No se produjo el mensaje esperado" };
+        },
+      },
+      {
+        id: "5 (IA)", escenario: "Pedir al servicio de IA la prioridad de una obligación de $90.000 que vence en 2 días (POST /ia/prioridad)",
+        esperado: "Requiere el servicio inteligente iniciado (uvicorn). Responde 200 con prioridad ALTA, probabilidades que suman 1 y la versión del modelo",
+        async ejecutar() {
+          const r = await intentar(() => ApiCliente.post("/ia/prioridad", { valor: 90000, fechaLimite: fechaMasDias(2) }));
+          if (!r.ok) return { aprobada: false, obtenido: `Error HTTP ${r.error.estado}: ${r.error.message}` };
+          const s = r.valor;
+          const suma = Object.values(s.probabilidades).reduce((a, b) => a + b, 0);
+          const bien = s.prioridad === "ALTA" && Math.abs(suma - 1) < 0.01 && !!s.versionModelo;
+          return { aprobada: bien, obtenido: `Prioridad ${s.prioridad} (confianza ${s.confianza}); probabilidades ${JSON.stringify(s.probabilidades)}; modelo v${s.versionModelo}; días para vencer: ${s.diasParaVencer}` };
+        },
+      },
+      {
+        id: "6 (IA)", escenario: "Enviar datos inválidos al servicio de IA (valor negativo y fecha que no existe)",
+        esperado: "El backend rechaza la petición con 400 y mensajes claros, sin llegar a consultar el modelo",
+        async ejecutar() {
+          const r = await intentar(() => ApiCliente.post("/ia/prioridad", { valor: -5, fechaLimite: "2026-02-31" }));
+          const bien = !r.ok && r.error.estado === 400 && r.error.errores.length === 2;
+          return { aprobada: bien, obtenido: bien ? `HTTP 400. Mensajes: ${r.error.errores.join(" | ")}` : "El servidor no rechazó los datos inválidos" };
+        },
+      },
+      {
+        id: "7 (extra)", escenario: "Acceder a la API sin haber iniciado sesión y con una contraseña incorrecta",
+        esperado: "Sin sesión responde 401; con contraseña incorrecta responde 401 y no inicia sesión",
+        async ejecutar() {
+          const mala = await intentar(() => ApiCliente.post("/auth/login", { correo: "demo@finantask.co", contrasena: "incorrecta" }));
+          await ApiCliente.post("/auth/logout");
+          const sinSesion = await intentar(() => ApiCliente.get("/obligaciones"));
+          const bien = !mala.ok && mala.error.estado === 401 && !sinSesion.ok && sinSesion.error.estado === 401;
+          return { aprobada: bien, obtenido: `Contraseña incorrecta: HTTP ${mala.ok ? "200" : mala.error.estado}; sin sesión: HTTP ${sinSesion.ok ? "200" : sinSesion.error.estado}` };
+        },
+      },
+    ];
+
+    function fila(num, escenario, esperado, obtenido, aprobada) {
+      const tr = document.createElement("tr");
+      [num, escenario, esperado, obtenido].forEach((t) => { const td = document.createElement("td"); td.textContent = t; tr.appendChild(td); });
+      const est = document.createElement("td");
+      est.textContent = aprobada ? "APROBADA" : "FALLIDA";
+      est.className = aprobada ? "ok" : "fallo";
+      tr.appendChild(est);
+      return tr;
+    }
+
+    document.getElementById("ejecutar").addEventListener("click", async (e) => {
+      const boton = e.currentTarget; boton.disabled = true;
+      const cuerpo = document.querySelector("#tabla tbody"); cuerpo.innerHTML = "";
+      document.getElementById("tabla").hidden = false;
+      const ctx = {}; let aprobadas = 0;
+
+      // Se inicia sesión con el usuario de prueba (datos_prueba.sql)
+      const sesion = await intentar(() => ApiCliente.post("/auth/login", { correo: "demo@finantask.co", contrasena: "demo1234" }));
+      if (!sesion.ok) {
+        cuerpo.appendChild(fila("-", "Iniciar sesión con el usuario de prueba", "Sesión iniciada", sesion.error.message, false));
+        document.getElementById("resumen").textContent = "No se pudo iniciar sesión: " + sesion.error.message;
+        boton.disabled = false; return;
+      }
+
+      for (const p of PRUEBAS) {
+        let res;
+        try { res = await p.ejecutar(ctx); }
+        catch (err) { res = { aprobada: false, obtenido: "Error: " + (err && err.message ? err.message : err) }; }
+        if (res.aprobada) aprobadas++;
+        cuerpo.appendChild(fila(p.id, p.escenario, p.esperado, res.obtenido, res.aprobada));
+        if (p.id === "4") {} // la prueba 4 restaura la URL de la API por sí misma
+      }
+
+      // Limpieza: se elimina la obligación creada por la prueba 1 (no tiene pagos)
+      await ApiCliente.post("/auth/login", { correo: "demo@finantask.co", contrasena: "demo1234" }).catch(() => {});
+      if (ctx.idCreada) await ApiCliente.eliminar("/obligaciones/" + ctx.idCreada).catch(() => {});
+      await ApiCliente.post("/auth/logout").catch(() => {});
+
+      document.getElementById("resumen").textContent = `${aprobadas} de ${PRUEBAS.length} pruebas aprobadas`;
+      document.getElementById("fecha").textContent = "Ejecutadas el " + new Date().toLocaleString("es-CO");
+      boton.disabled = false;
+    });
+  </script>
+</body>
+</html>

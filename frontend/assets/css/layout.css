@@ -1,0 +1,45 @@
+/* assets/css/layout.css
+   Estructura general: barra superior, contenido y pantallas de acceso. */
+
+.app-shell { min-height: 100vh; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  background: #e4e4e4;
+  border-bottom: 2px solid #999;
+  padding: 8px 20px;
+}
+.brand { font-size: 18px; font-weight: bold; color: var(--teal); text-decoration: none; margin-right: 10px; }
+.brand:hover { color: var(--teal-light); }
+
+.menu-toggle { display: none; margin-left: auto; padding: 4px 8px; background: #fff; border: 1px solid #999; cursor: pointer; }
+
+.nav { display: flex; gap: 14px; flex-wrap: wrap; }
+.nav-link { color: var(--ink); text-decoration: none; font-size: 14px; }
+.nav-link:hover { text-decoration: underline; }
+.nav-link.is-active { font-weight: bold; text-decoration: underline; color: var(--teal); }
+
+.topbar-user { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.nav-logout { background: #fff; border: 1px solid #999; padding: 2px 8px; font-size: 12px; cursor: pointer; border-radius: var(--radius); }
+.nav-logout:hover { background: #f3f3f3; }
+
+.content { max-width: 900px; margin: 0 auto; padding: 18px 16px 40px; }
+
+.page-header { margin-bottom: 18px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.page-sub { color: var(--muted); margin: 0; font-size: 13px; }
+.page-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ---------- Pantallas de acceso */
+.auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.auth-card { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border); padding: 22px 26px 26px; }
+.auth-title { text-align: center; font-size: 22px; font-weight: bold; margin: 0 0 14px; color: var(--teal); }
+
+@media (max-width: 760px) {
+  .menu-toggle { display: block; }
+  .nav, .topbar-user { display: none; width: 100%; }
+  .topbar.is-open .nav { display: flex; flex-direction: column; gap: 6px; }
+  .topbar.is-open .topbar-user { display: flex; margin-left: 0; }
+}
