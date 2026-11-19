@@ -50,7 +50,29 @@ const ApiCliente = (() => {
     return datos;
   }
 
+  // Descarga un archivo (PDF) generado por el backend
+  async function descargar(ruta, nombreArchivo) {
+    let respuesta;
+    try {
+      respuesta = await fetch(CONFIG.API_URL + ruta, { credentials: "same-origin" });
+    } catch (e) {
+      throw new ErrorApi(MSG_SIN_CONEXION, { estado: 0 });
+    }
+    if (!respuesta.ok) {
+      let datos = null;
+      try { datos = await respuesta.json(); } catch (e) { datos = null; }
+      throw new ErrorApi((datos && datos.error) || "No se pudo generar el PDF.", { estado: respuesta.status });
+    }
+    const url = URL.createObjectURL(await respuesta.blob());
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    enlace.click();
+    URL.revokeObjectURL(url);
+  }
+
   return {
+    descargar,
     alSesionExpirada: null, // la asigna el enrutador al arrancar
     get: (ruta) => pedir("GET", ruta),
     post: (ruta, cuerpo = {}) => pedir("POST", ruta, cuerpo),

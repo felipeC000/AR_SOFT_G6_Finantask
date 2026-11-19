@@ -18,6 +18,26 @@ const IAService = {
     }
   },
 
+  // Comprobante de pago (PDF) de una obligación y reporte de todos los pagos. El backend envía los datos en JSON
+  // al servicio de IA (POST /generar-pdf), que devuelve el PDF; aquí solo se descarga.
+  async descargarComprobante(idObligacion) {
+    return IAService._descargar(`/obligaciones/${idObligacion}/comprobante`, `comprobante-${idObligacion}.pdf`);
+  },
+
+  async descargarReporte() {
+    return IAService._descargar("/pagos/reporte", "reporte-pagos.pdf");
+  },
+
+  async _descargar(ruta, nombre) {
+    try {
+      await ApiCliente.descargar(ruta, nombre);
+      return { ok: true };
+    } catch (e) {
+      if (e instanceof ErrorApi) return { ok: false, mensaje: e.message };
+      throw e;
+    }
+  },
+
   // Ficha del modelo (versión, métricas, limitaciones)
   async estado() {
     try {

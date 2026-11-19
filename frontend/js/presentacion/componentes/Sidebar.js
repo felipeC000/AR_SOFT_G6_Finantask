@@ -1,6 +1,6 @@
 // js/presentacion/componentes/Sidebar.js
 // CAPA DE PRESENTACIÓN (UI)
-// Menú de navegación lateral. Cada opción corresponde a un módulo del sistema.
+// Barra de navegación superior. Cada opción corresponde a un módulo del sistema.
 
 const Sidebar = (() => {
   const OPCIONES = [

@@ -1,6 +1,6 @@
 // js/presentacion/componentes/Layout.js
 // CAPA DE PRESENTACIÓN (UI)
-// Estructura común de las pantallas internas: menú lateral + encabezado + contenido.
+// Estructura común de las pantallas internas: barra superior + encabezado + contenido.
 
 const Layout = {
   // opciones: { activo, titulo, subtitulo, acciones, contenido }

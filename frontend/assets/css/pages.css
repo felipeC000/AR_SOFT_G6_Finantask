@@ -51,3 +51,4 @@
 .ia-resultado:empty { display: none; }
 .ia-resultado--ok { border-left: 3px solid var(--amber); background: var(--amber-soft); padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; }
 .ia-resultado--error { color: var(--danger); }
+

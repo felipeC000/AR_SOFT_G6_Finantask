@@ -15,9 +15,9 @@ const DetalleObligacionPage = {
       activo: "obligaciones",
       titulo: o.nombre,
       subtitulo: `<a href="#/obligaciones" class="back-link">Volver a obligaciones</a>`,
-      acciones: pagada ? "" : `
+      acciones: (pagos.length ? `<button class="btn btn-secondary" data-action="comprobante">Descargar comprobante (PDF)</button>` : "") + (pagada ? "" : `
         <a href="#/obligaciones/${o.id}/editar" class="btn btn-secondary">${Iconos.editar} Editar</a>
-        <button class="btn btn-ghost btn-ghost--danger" data-action="eliminar">${Iconos.papelera} Eliminar</button>`,
+        <button class="btn btn-ghost btn-ghost--danger" data-action="eliminar">${Iconos.papelera} Eliminar</button>`),
       contenido: `
         <div class="detail-grid">
           <section class="panel">
@@ -54,6 +54,11 @@ const DetalleObligacionPage = {
         await DetalleObligacionPage.render(container, params);
       }
       return r;
+    });
+
+    Dom.onAction(container, "comprobante", async () => {
+      const r = await IAService.descargarComprobante(o.id);
+      if (!r.ok) Toast.mostrar(r.mensaje, "error");
     });
 
     Dom.onAction(container, "eliminar", async () => {

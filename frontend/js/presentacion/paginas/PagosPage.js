@@ -9,7 +9,13 @@ const PagosPage = {
       activo: "pagos",
       titulo: "Historial de pagos",
       subtitulo: `${pagos.length} pago(s) registrado(s).`,
+      acciones: pagos.length ? `<button class="btn btn-secondary" data-action="reporte">Descargar reporte (PDF)</button>` : "",
       contenido: `<section class="panel">${PagosTable.html(pagos)}</section>`,
+    });
+
+    Dom.onAction(container, "reporte", async () => {
+      const r = await IAService.descargarReporte();
+      if (!r.ok) Toast.mostrar(r.mensaje, "error");
     });
   },
 };

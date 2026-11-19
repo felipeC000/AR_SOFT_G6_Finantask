@@ -1,7 +1,7 @@
 // js/presentacion/componentes/ObligacionForm.js
 // CAPA DE PRESENTACIÓN (UI)
 // Formulario de obligación. Se reutiliza para crear (RF03), editar (RF05)
-// y para revisar el borrador del asistente de IA (RF13).
+// y con el botón de sugerencia de prioridad con IA.
 
 const ObligacionForm = {
   // valores: datos iniciales; opciones: { textoBoton, idForm, destacar }
