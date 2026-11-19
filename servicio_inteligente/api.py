@@ -11,13 +11,15 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Dict
+from typing import Dict, List, Optional
 
 import numpy as np
 import tensorflow as tf
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 
+from generador_pdf import construir_pdf
 from preprocesamiento import CLASES, normalizar
 
 RUTA = os.path.dirname(os.path.abspath(__file__))
@@ -93,3 +95,30 @@ def predecir(solicitud: Solicitud):
         "version_modelo": estado["info"].get("version", "desconocida"),
         "nota": "Sugerencia orientativa generada con un modelo entrenado con datos sintéticos; la decisión final es tuya.",
     }
+
+
+class PagoPdf(BaseModel):
+    fecha: str = Field(max_length=10)
+    valor: float = Field(gt=0, le=999_999_999_999.99)
+    obligacion: str = Field(default="", max_length=100)
+    categoria: str = Field(default="", max_length=80)
+
+
+class SolicitudPdf(BaseModel):
+    titulo: str = Field(max_length=80)
+    numero: str = Field(max_length=40)
+    emitido: str = Field(max_length=10)
+    usuario_nombre: str = Field(max_length=100)
+    usuario_correo: str = Field(max_length=150)
+    obligacion: Optional[Dict[str, str]] = None
+    pagos: List[PagoPdf]
+
+
+@app.post("/generar-pdf")
+def generar_pdf(solicitud: SolicitudPdf):
+    """Recibe los datos en JSON (cliente, obligación y pagos) y devuelve el comprobante o reporte en PDF."""
+    if not solicitud.pagos or len(solicitud.pagos) > 500:
+        raise HTTPException(status_code=422, detail="Debe haber entre 1 y 500 pagos.")
+    pdf = construir_pdf(jsonable_encoder(solicitud))
+    registro.info("PDF generado: %s (%s pago(s))", solicitud.titulo, len(solicitud.pagos))
+    return Response(content=pdf, media_type="application/pdf")
