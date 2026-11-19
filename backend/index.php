@@ -47,6 +47,8 @@ $rutas = [
     ['DELETE', '/obligaciones/{id}',        'ObligacionControlador', 'eliminar',      true],
     ['POST',   '/obligaciones/{id}/pagos',  'ObligacionControlador', 'registrarPago', true],
     ['GET',    '/pagos',                    'PagoControlador',       'listar',        true],
+    ['GET',    '/pagos/reporte',            'ComprobanteControlador', 'reporte',      true],
+    ['GET',    '/obligaciones/{id}/comprobante', 'ComprobanteControlador', 'obligacion', true],
     ['POST',   '/ia/prioridad',             'IAControlador',         'prioridad',     true],
     ['GET',    '/ia/estado',                'IAControlador',         'estado',        true],
 

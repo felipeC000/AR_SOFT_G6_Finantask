@@ -89,4 +89,55 @@ class IAControlador
     {
         Respuesta::json((new IAServicio())->estado());
     }
+
+}
+
+// Comprobante y reporte de pagos en PDF (los genera el servicio de IA a partir de un JSON)
+class ComprobanteControlador
+{
+    public function obligacion(array $p, array $cuerpo): void
+    {
+        $servicio = new ObligacionServicio();
+        $id = (int) $p['id'];
+        $o = $servicio->obtener($id);
+        $this->entregar('Comprobante de pago', $servicio->historialPagos($id), $o, 'comprobante-' . $id);
+    }
+
+    public function reporte(array $p, array $cuerpo): void
+    {
+        $this->entregar('Reporte de pagos realizados', (new ObligacionServicio())->historialPagos(), null, 'reporte-pagos');
+    }
+
+    private function entregar(string $titulo, array $pagos, ?array $o, string $archivo): void
+    {
+        if (!$pagos) throw new ErrorApi(409, 'Todavía no hay pagos registrados para generar el PDF.');
+        $u = Sesion::usuario() ?? [];
+        $datos = [
+            'titulo' => $titulo,
+            'numero' => 'FT-' . date('Ymd-His'),
+            'emitido' => Fechas::hoy(),
+            'usuario_nombre' => (string) ($u['nombre'] ?? ''),
+            'usuario_correo' => (string) ($u['correo'] ?? ''),
+            'obligacion' => $o ? [
+                'nombre' => (string) $o['nombre'],
+                'categoria' => (string) ($o['categoria'] ?? ''),
+                'valor' => (string) $o['valor'],
+                'fecha_limite' => (string) $o['fechaLimite'],
+                'estado' => (string) $o['estado'],
+                'descripcion' => (string) ($o['descripcion'] ?? ''),
+            ] : null,
+            'pagos' => array_map(fn ($x) => [
+                'fecha' => $x['fechaPago'],
+                'valor' => $x['valorPagado'],
+                'obligacion' => (string) $x['obligacion']['nombre'],
+                'categoria' => (string) $x['obligacion']['categoria'],
+            ], array_reverse($pagos)),
+        ];
+        $pdf = (new IAServicio())->generarPdf($datos);
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $archivo . '.pdf"');
+        header('Content-Length: ' . strlen($pdf));
+        echo $pdf;
+        exit;
+    }
 }

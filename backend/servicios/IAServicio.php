@@ -63,6 +63,14 @@ class IAServicio
         ];
     }
 
+    // Comprobante o reporte de pagos: se envían los datos en JSON al servicio de IA, que devuelve el PDF
+    public function generarPdf(array $datos): string
+    {
+        Sesion::requerirId();
+        $this->limitarConsultas();
+        return $this->llamar('POST', '/generar-pdf', $datos, true)['pdf'];
+    }
+
     // Estado del servicio y ficha del modelo (versión, métricas, limitaciones)
     public function estado(): array
     {
@@ -70,7 +78,7 @@ class IAServicio
         return ['disponible' => true, 'modelo' => $this->llamar('GET', '/modelo')];
     }
 
-    private function llamar(string $metodo, string $ruta, ?array $cuerpo = null): array
+    private function llamar(string $metodo, string $ruta, ?array $cuerpo = null, bool $binario = false): array
     {
         if (!ini_get('allow_url_fopen')) {
             error_log('FinanTask: allow_url_fopen está desactivado en php.ini');
@@ -97,6 +105,9 @@ class IAServicio
         }
         if ($estado === 422) {
             throw new ErrorApi(400, 'Los datos enviados al servicio de IA no son válidos.');
+        }
+        if ($binario && $estado === 200) {
+            return ['pdf' => $respuesta];
         }
         $datos = json_decode($respuesta, true);
         if ($estado !== 200 || !is_array($datos)) {
