@@ -98,7 +98,8 @@ finantask/
 │   └── nucleo/                   Conexión, sesión, respuestas, errores, fechas
 ├── servicio_inteligente/         Servicio de IA (Python + TensorFlow + FastAPI)
 │   ├── entrenar_modelo.py        Entrena y evalúa el modelo
-│   ├── api.py                    API del modelo (/predecir)
+│   ├── api.py                    API del servicio (/predecir y /generar-pdf)
+│   ├── generador_pdf.py          Comprobante y reporte de pagos en PDF
 │   ├── preprocesamiento.py       Normalización compartida
 │   ├── modelo_prioridad.keras    Modelo entrenado
 │   └── README.md                 Instalación, endpoints, métricas y limitaciones
@@ -108,6 +109,8 @@ finantask/
 ├── tests/
 │   ├── pruebas_integracion.html  Ejecuta las pruebas de integración en el navegador
 │   └── PRUEBAS_INTEGRACION.md    Registro de resultados de las pruebas
+├── docs/
+│   └── EVIDENCIAS.md             Evidencias de la integración del servicio de IA
 ├── README.md
 └── .gitignore
 ```
@@ -143,6 +146,8 @@ URL base: `http://localhost/finantask/backend/index.php`. Todas las respuestas s
 | `DELETE /obligaciones/{id}` | Eliminar (no si tiene pagos) | 204, 404, 409 |
 | `POST /obligaciones/{id}/pagos` | Registrar un pago (transacción) | 201, 400, 404, 409 |
 | `GET /pagos` | Historial de pagos (`?idObligacion=`) | 200 |
+| `GET /obligaciones/{id}/comprobante` | Comprobante de pago en PDF de una obligación | 200 (PDF), 404, 409, 429, 503 |
+| `GET /pagos/reporte` | Reporte de todos los pagos realizados en PDF | 200 (PDF), 409, 429, 503 |
 | `POST /ia/prioridad` | Prioridad sugerida por el modelo de IA (`valor`, `fechaLimite`) | 200, 400, 429, 503 |
 | `GET /ia/estado` | Ficha del modelo (versión, métricas, limitaciones) | 200, 503 |
 
@@ -179,16 +184,42 @@ Las rutas distintas de `/auth/*` exigen sesión iniciada (401 si no la hay).
 | Detalle y registro de pago | `#/obligaciones/:id` | RF08, RF10 |
 | Historial de pagos | `#/pagos` | RF10 |
 | Resumen mensual | `#/reportes` | RF12 |
-| Asistente de registro con IA | `#/asistente` | RF13 (extracción de texto simulada) |
-| Sugerencia de prioridad con IA | botón en `#/obligaciones/nueva`, `#/obligaciones/:id/editar` y `#/asistente` | Servicio de IA (modelo TensorFlow) |
+| Sugerencia de prioridad con IA | botón en `#/obligaciones/nueva` y `#/obligaciones/:id/editar` | Servicio de IA |
+| Comprobante y reporte de pagos en PDF | botones en `#/obligaciones/:id` y `#/pagos` | Servicio de IA (soporte de pagos) |
 
 ## Pruebas de integración
 
 Abrir `http://localhost/finantask/tests/pruebas_integracion.html` y pulsar **Ejecutar pruebas**. La página realiza las pruebas contra la API y la base reales y muestra el escenario, el resultado esperado, el obtenido y el estado de cada una. Los resultados se registran en [`tests/PRUEBAS_INTEGRACION.md`](tests/PRUEBAS_INTEGRACION.md).
 
+## Servicio de inteligencia artificial
+
+**Qué hace la IA en FinanTask.** El servicio inteligente cumple dos funciones dentro de la aplicación:
+1. **Sugerir la prioridad** (BAJA, MEDIA o ALTA) de una obligación a partir de su valor y los días que faltan para su fecha límite. Se usa en el formulario de obligación (botón *Sugerir prioridad con IA*).
+2. **Generar el comprobante o el reporte de pagos en PDF** como soporte de los pagos realizados. La aplicación envía los datos en JSON y el servicio devuelve el PDF. Se usa en *Detalle de la obligación* (*Descargar comprobante*) y en *Historial de pagos* (*Descargar reporte*).
+
+**Tecnología.** Python con FastAPI. La prioridad la calcula una red neuronal de TensorFlow/Keras. El PDF se arma con ReportLab (es generación de documentos, no un modelo entrenado).
+
+**Componente que integra.** `backend/servicios/IAServicio.php`, con `IAControlador` y `ComprobanteControlador`. Rutas: `POST /ia/prioridad`, `GET /ia/estado`, `GET /obligaciones/{id}/comprobante` y `GET /pagos/reporte`. En el navegador lo usa `frontend/js/logica/servicios/iaService.js`.
+
+**Comunicación.** Navegador → API PHP (exige sesión, valida los datos y limita las consultas) → servicio FastAPI en `http://127.0.0.1:8000` → respuesta → pantalla. El navegador nunca habla con el servicio de IA.
+
+| Función | Recibe | Devuelve | Cómo se usa el resultado |
+|---|---|---|---|
+| `POST /predecir` | `dias_para_vencer`, `valor` | prioridad sugerida, confianza y probabilidades | se muestra en el formulario y la persona decide si la aplica |
+| `POST /generar-pdf` | JSON con cliente, obligación (opcional) y lista de pagos (`fecha`, `valor`, `obligacion`, `categoria`) | archivo PDF | el navegador lo descarga como soporte de los pagos |
+
+El comprobante es un soporte informativo de lo registrado en FinanTask; no es una factura electrónica ni tiene validez tributaria.
+
+**Requisitos.** Python 3.10 a 3.12. En `servicio_inteligente/`: `pip install -r requirements.txt` y `uvicorn api:app --reload`. En `php.ini` debe estar activo `allow_url_fopen`.
+
+**Ejemplo de funcionamiento.** Con el servicio iniciado, `python probar_api.py` imprime una predicción; también se puede abrir `http://127.0.0.1:8000/docs`. En la aplicación: Nueva obligación, escribir valor y fecha y pulsar *Sugerir prioridad con IA*; o registrar un pago y pulsar *Descargar comprobante (PDF)* en el detalle de la obligación. Las capturas están en `docs/EVIDENCIAS.md`.
+
+**Configuración.** La dirección del servicio y el tiempo de espera están en la sección `ia` de `backend/config.php`. Si el servicio está apagado, la aplicación avisa y el resto del sistema sigue funcionando.
+
 ## Lo que no incluye todavía
 
-- La extracción de datos desde el texto de una factura (asistente de registro) sigue **simulada** en el navegador; el servicio de IA implementado sugiere la prioridad de una obligación.
+- El comprobante en PDF no es una factura electrónica (no tiene validez tributaria).
+- La extracción de datos desde el texto de una factura (asistente de registro) no se implementó.
 - El modelo de IA se entrenó con datos sintéticos (ver sus limitaciones en `servicio_inteligente/README.md`).
 - Autenticación con tokens (JWT) y recuperación de contraseña.
 - Despliegue en un servidor de producción.
@@ -201,6 +232,7 @@ Abrir `http://localhost/finantask/tests/pruebas_integracion.html` y pulsar **Eje
 - Las reglas de negocio y la validación definitiva pasaron al backend; en el navegador solo quedan las validaciones rápidas de los formularios.
 - Se reorganizó el repositorio en `frontend/`, `backend/`, `database/` y `tests/`.
 - Se agregó el **servicio de inteligencia artificial** (`servicio_inteligente/`): un modelo de TensorFlow, expuesto con FastAPI, que sugiere la prioridad de una obligación y está integrado en el formulario mediante el backend.
+- Se rediseñó la interfaz (barra superior y formularios de una columna) y se agregó la descarga del comprobante y del reporte de pagos en PDF.
 
 ## Equipo
 
